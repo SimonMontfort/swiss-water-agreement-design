@@ -58,14 +58,15 @@ library("igraph")
 # change directory here to replicate 
 setwd("/Volumes/Transcend/Uni/Zivi Eawag/Script/Model/ModelInput")
 
-# load dyadic data
-load("/Volumes/Transcend/Uni/Zivi Eawag/Script/Konkordats/ModelInput/dyadicdat.RData")
+load("/Volumes/Transcend/Uni/Zivi Eawag/Script/Model/ModelInput/dyadicdat.RData")
 
-# how many bilaterals, how many multilaterals?
-dyadicdat %>% filter(bilateral == 1) %>% nrow(.)
-dyadicdat %>% filter(bilateral == 0) %>% nrow(.)
+# subset to those issues included
+dyadicdat <- dyadicdat %>%
+  filter(pollution == 1 | shipping == 1 | fish ==  1 | power ==  1)
 
-dyadicdat <- dyadicdat %>% filter(bilateral == 1)
+dyadicdat <- dyadicdat %>% filter(bilateral == 1
+                                  & river == 1
+                                  )
 
 # create DV for agreements
 dyadicdat <- dyadicdat %>%
@@ -716,7 +717,80 @@ stargazer(res_agreement_1, res_agreement_2, res_agreement_3, res_commission_1, r
           no.space = TRUE,
           df = FALSE,
           float.env = "sidewaystable",
-          stargazer_stat_code_list = list(c("aic", "bic"))
+          stargazer_stat_code_list = list(c("aic", "bic")),
+          star.char = c("°", "*", "**", "***"),
+          star.cutoffs = c(.1, .05, .01, .001)
+          # se=list(c(summary(res_enf_cant)$coefficients[, 2], summary(prob2)$coefficients[, 2], summary(prob3)$coefficients[, 2], summary(prob4)$coefficients[, 2] ))
+)
+
+res_agreement_1 <-    coxph(Surv(time, treaty_yes) ~ 
+                            + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            +	pollution	+ shipping +	fish 
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+res_agreement_2 <-    coxph(Surv(time, treaty_yes) ~  
+                            + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+res_commission_1 <- coxph(Surv(time, commission) ~  
+                          + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                          +	pollution	+ shipping +	fish 
+                          ,
+                          cluster = dyad_id, data = com_dat)
+res_commission_2 <- coxph(Surv(time, commission) ~  
+                          + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                          ,
+                          cluster = dyad_id, data = com_dat)
+res_monitoring_1 <- coxph(Surv(time, monitoring) ~  
+                          + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                          +	pollution	+ shipping  +	fish 
+                          ,
+                          cluster = dyad_id, data = mon_dat)
+res_monitoring_2 <- coxph(Surv(time, monitoring) ~ 
+                          + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                          ,
+                          cluster = dyad_id, data = mon_dat)
+res_conflict_1 <-   coxph(Surv(time, conflict) ~   
+                          + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                          +	pollution	+ shipping  +	fish 
+                          ,
+                          cluster = dyad_id, data = con_dat)
+res_conflict_2 <-   coxph(Surv(time, conflict) ~    
+                          + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                          ,
+                          cluster = dyad_id, data = con_dat)
+
+
+library(stargazer)
+stargazer(res_agreement_1, res_agreement_2, res_commission_1, res_commission_2, res_monitoring_1, res_monitoring_2, res_conflict_1, res_conflict_2,
+          type = "text",
+          booktaps = T,
+          title = "Cox Proportional Hazard Models: risk set contiguity through land, bilateral agreements",
+          # column.labels   = c("Mechanisms", "Agreement"),
+          column.separate = c(3, 1),
+          dep.var.labels=c("Agreement", "Commission", "Monitoring", "Conflict"),
+          # covariate.labels=c("Salience",
+          #                    "Symmetry",
+          #                    "Border Length",
+          #                    "Dyad Size",
+          #                    "Bi-lingue",
+          #                    "Prior Commission",
+          #                    "Prior Monitoring",
+          #                    "Prior Conflict Resolution",
+          #                    "Prior Agreements",
+          #                    "Pollution",
+          #                    "Shipping",
+          #                    "Fish",
+          #                    "Power"),
+          column.sep.width = "-20pt",
+          notes = "standard errors clustered by dyad",
+          align=TRUE,
+          no.space = TRUE,
+          df = FALSE,
+          float.env = "sidewaystable",
+          stargazer_stat_code_list = list(c("aic", "bic")),
+          star.char = c("°", "*", "**", "***"),
+          star.cutoffs = c(.1, .05, .01, .001)
           # se=list(c(summary(res_enf_cant)$coefficients[, 2], summary(prob2)$coefficients[, 2], summary(prob3)$coefficients[, 2], summary(prob4)$coefficients[, 2] ))
 )
 
@@ -743,7 +817,7 @@ dev.off()
 
 res_agreement_1.1 <-    coxph(Surv(time, treaty_yes) ~  salience + symmetry + border_length + tt(border_length) + total_size + bi_lingue 
                               + agr_cum + tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum + tt(monitoring_cum) + conflict_cum + tt(conflict_cum)
-                              +	pollution + tt(pollution)	+ shipping +	fish + power
+                              +	pollution + tt(pollution)	+ shipping +	fish 
                               # + river
                               ,
                               cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
@@ -761,9 +835,9 @@ ggcoxdiagnostics(res_agreement_1, type = "dfbeta",
                  linear.predictions = FALSE, ggtheme = theme_bw())
 dev.off()
 
-res_commission_1.1 <- coxph(Surv(time, commission) ~   (salience) + symmetry  + border_length + total_size + bi_lingue +tt(bi_lingue) 
-                          + agr_cum + tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum + tt(monitoring_cum) + conflict_cum 
-                          +	pollution	+ shipping +	fish + power
+res_commission_1.1 <- coxph(Surv(time, commission) ~   (salience) + symmetry  + border_length + total_size + bi_lingue 
+                          + agr_cum + tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum + tt(monitoring_cum) + conflict_cum + tt(conflict_cum) 
+                          +	pollution + tt(pollution)	+ shipping +	fish 
                           # + river
                           ,
                           cluster = dyad_id, data = com_dat, tt = function(x, t, ...) x * log(t+20))
@@ -783,7 +857,7 @@ dev.off()
 
 res_monitoring_1.1 <- coxph(Surv(time, monitoring) ~  (salience) + symmetry    + border_length + tt(border_length) + total_size + bi_lingue + monitoring_cum + tt(monitoring_cum)  
                           + agr_cum + tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum + tt(monitoring_cum) + conflict_cum + tt(conflict_cum) 
-                          +	pollution + tt(pollution)	+ shipping +	fish + power
+                          +	pollution	+ shipping +	fish 
                           # + river
                           ,
                           cluster = dyad_id, data = mon_dat, tt = function(x, t, ...) x * log(t+20))
@@ -802,9 +876,9 @@ ggcoxdiagnostics(res_conflict_1, type = "dfbeta",
 
 dev.off()
 
-res_conflict_1.1 <-   coxph(Surv(time, conflict) ~   (salience) + symmetry   + border_length + total_size + bi_lingue + tt(bi_lingue) + conflict_cum + tt(conflict_cum)  
-                          + agr_cum + tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum + conflict_cum 
-                          +	pollution + tt(pollution)	+ shipping  +	fish 
+res_conflict_1.1 <-   coxph(Surv(time, conflict) ~   (salience) + symmetry   + border_length + total_size + bi_lingue
+                          + agr_cum + tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum  + conflict_cum + tt(conflict_cum)  
+                          +	pollution + tt(pollution)	+ shipping + tt(shipping)  + fish +	tt(fish) 
                           # + power
                           # + river
                           ,
@@ -837,7 +911,9 @@ stargazer(res_agreement_1.1, res_commission_1.1, res_monitoring_1.1, res_conflic
           no.space = TRUE,
           df = FALSE,
           float.env = "sidewaystable",
-          stargazer_stat_code_list = list(c("aic", "bic"))
+          stargazer_stat_code_list = list(c("aic", "bic")),
+          star.char = c(".", "*", "**", "***"),
+          star.cutoffs = c(.1, .05, .01, .001)
           # se=list(c(summary(res_enf_cant)$coefficients[, 2], summary(prob2)$coefficients[, 2], summary(prob3)$coefficients[, 2], summary(prob4)$coefficients[, 2] ))
 )
 
