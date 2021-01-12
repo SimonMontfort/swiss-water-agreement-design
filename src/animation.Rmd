@@ -64,6 +64,8 @@ render.d3movie(dyn,
                edge.lwd='weight',
                output.mode = 'htmlWidget')
 
+saveVideo(render.animation(dyn,edge.lwd='weight',displaylabels=TRUE) )
+
 timeline(dyn)
 
 proximity.timeline(dyn, 
