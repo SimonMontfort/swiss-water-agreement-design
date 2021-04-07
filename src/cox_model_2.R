@@ -310,22 +310,68 @@ seq %>%
 
 seq_sub <- seqefsub(seq, pmin.support = 0.05)
 
-plot(seq_sub[1:15], col = "cyan", ylab = "Frequency", xlab = "Subsequences", cex = 1.5)
+ggplot(seq_sub) + 
+  geom_bar(mapping = aes(y=Support, fill = Period) ,width=.3,
+           stat="identity", position = "dodge") +
+  theme_classic() +
+  theme(
+    # text = element_text(size=15),
+    # axis.text=element_text(size=15, angle = 90),
+    # axis.ticks.length.x = unit(.2, "cm"),
+    # axis.ticks.x = element_blank(),
+    # axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1),
+    # panel.grid.major.y = element_line(colour = "grey40"),
+    # panel.grid.major.x = element_blank(),
+    # panel.spacing = unit(3, "lines"),
+    # strip.background = element_rect(color = "white"),
+    # strip.text.x = element_text(size = 15),
+    # strip.placement = "inside",
+    # legend.position = "none"
+  ) 
+
+seq <- as.data.frame(seq_sub$data$Support)
+seq$seq_sub <- as.character(seq_sub$subseq)
+colnames(seq) <- c("support", "subseq")
+
+# or, order by prevalence:
+seq$subseq <- factor(seq$subseq, levels = seq$subseq[rev(order(seq$support))])
+
+ggplot(seq[1:20,], aes(x = subseq, y= support)) +
+  geom_bar( position="dodge",stat="identity", width=.5) +
+  # coord_flip() +
+  ylab("Proportion of Subsequences") +   xlab("Sub Sequence") +
+  theme_classic() +
+  theme(
+    text = element_text(size=15),
+    axis.text=element_text(size=15, angle = 90),
+    axis.ticks.length.x = unit(.2, "cm"),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1),
+    panel.grid.major.y = element_line(colour = "grey40"),
+    panel.grid.major.x = element_blank(),
+    panel.spacing = unit(3, "lines"),
+    strip.background = element_rect(color = "white"),
+    strip.text.x = element_text(size = 15),
+    strip.placement = "inside",
+    legend.position = "none"
+)
+
+# plot(seq_sub[1:15], col = "blue", ylab = "Frequency", xlab = "Subsequences", cex = 1.5)
 
 # transform to event sequences
 # https://stackoverflow.com/questions/28965909/plot-event-sequences-event-sequences-clustering and 
 # Studer, M., Müller, N.S., Ritschard, G. & Gabadinho, A. (2010), "Classer, discriminer et visualiser des séquences d'événements", In Extraction et gestion des connaissances (EGC 2010), Revue des nouvelles technologies de l'information RNTI. Vol. E-19, pp. 37-48.
 # Ritschard, G., Bürgin, R., and Studer, M. (2014), "Exploratory Mining of Life Event Histories", In McArdle, J.J. & Ritschard, G. (eds) Contemporary Issues in Exploratory Data Mining in the Behavioral Sciences. Series: Quantitative Methodology, pp. 221-253. New York: Routledge.
 
-idcost <- 1:3
-dd <- seqedist(seq, idcost=idcost, vparam=.1)
-
-library(cluster)
-clusterward1 <- agnes(dd, diss = TRUE, method = "ward")
-plot(clusterward1, which.plot = 2)
-cl1.4 <- cutree(clusterward1, k = 4)
-cl1.4fac <- factor(cl1.4, labels = paste("Type", 1:4))
-
+# idcost <- 1:3
+# dd <- seqedist(seq, idcost=idcost, vparam=.1)
+# 
+# library(cluster)
+# clusterward1 <- agnes(dd, diss = TRUE, method = "ward")
+# plot(clusterward1, which.plot = 2)
+# cl1.4 <- cutree(clusterward1, k = 4)
+# cl1.4fac <- factor(cl1.4, labels = paste("Type", 1:4))
+# 
 time_to_event <- function(dyadicdat, var1, var2){
   library( data.table )
   DT <- as.data.table(dyadicdat)
@@ -338,32 +384,41 @@ time_to_event <- function(dyadicdat, var1, var2){
   #set keys
   setkey( DT.melt, cantons, time )
   #get time of previous type2 for all rows with type2
-  temp <- DT.melt[ variable == var1 & value == 1, ][ DT.melt, 
+  temp <- DT.melt[ variable == var1 & value == 1, ][ DT.melt,
                                                      (colname) := {
                                                        #create on-the-fly subset
                                                        val = DT.melt[ cantons == i.cantons & value == 1 & variable == var2 & time < i.time, ]
                                                        list( min( i.time - val$time ) )
                                                      }, by = .EACHI ][]
-  
+
   temp[ is.infinite( get(colname) ), (colname) := NA ][]
-  
+
   # join back to original
   # use eval+parse to keep the colname variable
   expr = paste0("DT[ temp, (colname) := i.", colname, ", on = .(cantons, time)]")
   eval(parse(text=expr))
-  
+
   dyadicdat <- as.data.frame(DT)
   return(dyadicdat)
 }
 
-plot_dat <- dyadicdat[dyadicdat$year >= 1980 & 
+plot_dat <- dyadicdat[dyadicdat$year >= 1980 &
                         dyadicdat$year != 0,]
 # apply this function
-plot_dat <- time_to_event(plot_dat, "commission", "monitoring")
-plot_dat <- time_to_event(plot_dat, "commission", "conflict")
+plot_dat <- time_to_event(plot_dat, "fish", "treaty_yes")
+plot_dat <- time_to_event(plot_dat, "construction", "treaty_yes")
+plot_dat <- time_to_event(plot_dat, "pollution", "treaty_yes")
+plot_dat <- time_to_event(plot_dat, "shipping", "treaty_yes")
 
-plot_dat <- time_to_event(plot_dat, "monitoring", "commission")
-plot_dat <- time_to_event(plot_dat, "monitoring", "conflict")
+plot_dat <- time_to_event(plot_dat, "fish", "commission")
+plot_dat <- time_to_event(plot_dat, "construction", "commission")
+plot_dat <- time_to_event(plot_dat, "pollution", "commission")
+plot_dat <- time_to_event(plot_dat, "shipping", "commission")
+
+plot_dat <- time_to_event(plot_dat, "fish", "conflict")
+plot_dat <- time_to_event(plot_dat, "construction", "conflict")
+plot_dat <- time_to_event(plot_dat, "pollution", "conflict")
+plot_dat <- time_to_event(plot_dat, "shipping", "conflict")
 
 plot_dat <- time_to_event(plot_dat, "conflict", "commission")
 plot_dat <- time_to_event(plot_dat, "conflict", "monitoring")
@@ -372,25 +427,27 @@ plot_dat <- time_to_event(plot_dat, "commission", "commission")
 plot_dat <- time_to_event(plot_dat, "monitoring", "monitoring")
 plot_dat <- time_to_event(plot_dat, "conflict", "conflict")
 
-plot_dat %>% 
-  select(cantons, time, commission, monitoring, conflict, 
-         t_commission_from_monitoring, t_commission_from_conflict,
-         t_monitoring_from_commission, t_monitoring_from_conflict,
-         t_conflict_from_commission, t_conflict_from_monitoring,
-         t_commission_from_commission, t_monitoring_from_monitoring, t_conflict_from_conflict
-         ) %>% 
+plot_dat %>%
+  select(cantons, time, commission, monitoring, conflict,
+         t_fish_from_treaty_yes, t_construction_from_treaty_yes,
+         t_pollution_from_treaty_yes, t_shipping_from_treaty_yes
+         ) %>%
   as.data.frame()
 
-p <- plot_dat %>% 
-  reshape2::melt(., id.vars = "time", measure.vars = c("t_commission_from_commission", "t_commission_from_monitoring", "t_commission_from_conflict", 
-                                                       "t_monitoring_from_commission", "t_monitoring_from_monitoring", "t_monitoring_from_conflict",
-                                                       "t_conflict_from_commission", "t_conflict_from_monitoring", "t_conflict_from_conflict")) %>% 
-  filter(!is.na(value))
-  
-ggplot(p, aes(x=variable, y=value, fill=variable)) + 
+p <- plot_dat %>%
+  reshape2::melt(., id.vars = "time", measure.vars = c("t_fish_from_treaty_yes", "t_construction_from_treaty_yes", "t_pollution_from_treaty_yes", "t_shipping_from_treaty_yes",
+                                                       "t_fish_from_commission", "t_construction_from_commission", "t_pollution_from_commission", "t_shipping_from_commission",
+                                                       "t_fish_from_conflict", "t_construction_from_conflict", "t_pollution_from_conflict", "t_shipping_from_conflict")) %>%
+  dplyr::filter(!is.na(value)) 
+
+p$variable2[p$variable == "t_commission_from_commission" | p$variable == "t_commission_from_monitoring" | p$variable == "t_commission_from_conflict"] <- "commission"
+p$variable2[p$variable == "t_monitoring_from_commission" | p$variable == "t_monitoring_from_monitoring" | p$variable == "t_monitoring_from_conflict"] <- "monitoring"
+p$variable2[p$variable == "t_conflict_from_commission" | p$variable == "t_conflict_from_monitoring" | p$variable == "t_conflict_from_conflict"] <- "conflict"
+
+ggplot(p, aes(x=variable, y=value, fill=variable)) +
   geom_boxplot(aes(x=variable, y=value, fill=variable)) +
   geom_jitter(shape=16, position=position_jitter(0.2)) +
-  theme_minimal()
+  theme_minimal() 
 
 ## correlation between mechanisms
 chi <- matrix(nrow = 6, ncol = 3)
@@ -445,7 +502,8 @@ sum(plot_dat$conflict)
 
 sum(plot_dat$treaty_yes)
 
-dyadicdat %>%
+## plot 2
+p <- dyadicdat %>%
   group_by(ID_SM) %>%
   slice(1) %>%
   as_tibble() %>%
@@ -463,21 +521,80 @@ dyadicdat %>%
          Period = replace(Period, year>= 1980 & year< 1990, "1980-1989"), 
          Period = replace(Period, year>= 1990 & year< 2000, "1990-1999"),
          Period = replace(Period, year>= 2000 & year< 2010, "2000-2009"),
-         Period = replace(Period, year>= 2010 & year<= 2020, "2010-2020")) %>%
+         Period = replace(Period, year>= 2010 & year<= 2020, "2010-2020")) 
+
+# plot the number of new agreements + design principles
+p %>%
   reshape2::melt(., id.vars = "Period", measure.vars = c("agreement_yes", "commission", "monitoring", "conflict")) %>%
-  group_by(Period, variable) %>%
-  summarise(Frequency = sum(value)) %>%
+  group_by(Period, variable) %>% 
+  summarise(Frequency = sum(value)) %>% 
   ggplot() + 
-  geom_bar(aes(y = Frequency, x = Period, width=.5, color = "black"), color = NA,
-           stat="identity", position = "dodge") +
-  facet_wrap(~variable) +
+  geom_bar(  mapping = aes(x=Period, y=Frequency, fill = Period), width=.3,
+             stat="identity", position = "dodge") +
+  facet_wrap(~variable, ncol=4, scale = "free",
+             labeller = labeller(variable = c("agreement_yes" = "Agreement (yes)", 
+                                              "commission" = "Commission (yes)",  
+                                              "monitoring" = "Monitoring (yes)", 
+                                              "conflict" = "Conflict Resolution (yes)"))) +
   theme_classic() +
   # coord_flip() +
   theme(
-    axis.text=element_text(size=10, angle = 90),
-    panel.grid.major.y = element_line(colour = "grey80"),
+    text = element_text(size=15),
+    axis.text=element_text(size=15, angle = 90),
+    axis.ticks.length.x = unit(.2, "cm"),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1),
+    panel.grid.major.y = element_line(colour = "grey40"),
     panel.grid.major.x = element_blank(),
-    panel.spacing = unit(1, "lines")) 
+    panel.spacing = unit(3, "lines"),
+    strip.background = element_rect(color = "white"),
+    strip.text.x = element_text(size = 15),
+    strip.placement = "inside",
+    legend.position = "none"
+  ) +
+  ylab("New Agreements") +   xlab("") +
+  scale_fill_manual(values =  c(rep("grey", 6), rep("black", 4))) +
+  scale_alpha_manual( guide = guide_legend(override.aes = list(linetype = c(0, 1),
+                                                               shape = c(16, NA),
+                                                               color = "black") ) ) +
+  scale_y_continuous(limits=c(0,20), expand = c(0, 0))
+dev.off()
+
+# plot the number of new agreements by issue
+p %>%
+  reshape2::melt(., id.vars = "Period", measure.vars = c("pollution", "shipping", "fish", "construction")) %>%
+  group_by(Period, variable) %>% 
+  summarise(Frequency = sum(value)) %>% 
+  ggplot() + 
+  geom_bar(  mapping = aes(x=Period, y=Frequency, fill = Period) ,width=.3,
+             stat="identity", position = "dodge") +
+  facet_wrap(~variable, ncol=4, scale = "free",
+             labeller = labeller(variable = c("pollution" = "Pollution", 
+                                              "shipping" = "Shipping",  
+                                              "fish" = "Fish", 
+                                              "construction" = "Construction"))) +
+  theme_classic() +
+  # coord_flip() +
+  theme(
+    text = element_text(size=15),
+    axis.ticks.length.x = unit(.2, "cm"),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1),
+    panel.grid.major.y = element_line(colour = "grey40"),
+    panel.grid.major.x = element_blank(),
+    panel.spacing = unit(3, "lines"),
+    strip.background = element_rect(color = "white"),
+    strip.text.x = element_text(size = 15),
+    strip.placement = "inside",
+    legend.position = "none"
+  ) +
+  ylab("New Agreements") +   xlab("") +
+  scale_fill_manual(values =  c(rep("grey", 6), rep("black", 4))) +
+  scale_alpha_manual( guide = guide_legend(override.aes = list(linetype = c(0, 1),
+                                                               shape = c(16, NA),
+                                                               color = "black") ) ) +
+  scale_y_continuous(limits=c(0,20), expand = c(0, 0))
+dev.off()
 
 # ## plot 2
 # dyadicdat %>%
@@ -599,74 +716,150 @@ dyadicdat %>%
   dplyr::select(ID_SM, cantons, time, year, date, commission, monitoring, conflict, commission_cum, monitoring_cum, conflict_cum, agr_cum, treaty_yes) %>%
   as.data.frame()
 
+
+dyadicdat <- dyadicdat %>%
+  mutate(any_ext_yes = ifelse(mon_comm == 1 | conf_body == 1 | conf_fed == 1 | commission == 1, 1, 0),
+         any_mech_yes = ifelse(commission == 1 | monitoring == 1 | conflict == 1, 1, 0))
+
 ############
 # (5) analysis of repeated events
 ############
 
 
-res_agreement_1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                            ,
+res_agreement_main_1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum,
                             cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_agreement_2 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+res_agreement_main_2 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping +	fish + construction
-                            ,
+                            + symmetry + bi_lingue,
                             cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_agreement_3 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                            +	pollution	+ shipping +	fish + construction
-                            + symmetry + bi_lingue  
-                          ,
-                          cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_commission_1 <-   coxph(Surv(time, commission) ~  
-                            + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                          ,
-                          cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_commission_2 <-   coxph(Surv(time, commission) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                          +	pollution	+ shipping +	fish + construction
-                          ,
-                          cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_commission_3 <-   coxph(Surv(time, commission) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+res_any_mech_main_1 <-    coxph(Surv(time, any_mech_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum,
+                            cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
+res_any_mech_main_2 <-    coxph(Surv(time, any_mech_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                           +	pollution	+ shipping +	fish + construction
+                           + symmetry + bi_lingue,
+                            cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
+res_commission_main_1 <-   coxph(Surv(time, commission) ~  
+                            + agr_cum + commission_cum + monitoring_cum + conflict_cum,
+                            cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
+res_commission_main_2 <-   coxph(Surv(time, commission) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                           +	pollution	+ shipping +	fish + construction
                           + symmetry + bi_lingue  
                           ,
                           cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_monitoring_1 <-   coxph(Surv(time, mon_cant) ~ 
+res_monitoring_main_1 <-   coxph(Surv(time, mon_cant) ~ 
                           + agr_cum + commission_cum + monitoring_cum + conflict_cum 
                           ,
                           cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_monitoring_2 <-   coxph(Surv(time, mon_cant) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                          +	pollution	+ shipping +	fish + construction
-                          ,
-                          cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_monitoring_3 <-   coxph(Surv(time, mon_cant) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+res_monitoring_main_2 <-   coxph(Surv(time, mon_cant) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                           +	pollution	+ shipping +	fish + construction
                           + symmetry + bi_lingue  
                           ,
                           cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_conflict_1 <-     coxph(Surv(time, conflict) ~    
+res_conflict_main_1 <-     coxph(Surv(time, conflict) ~    
                           + agr_cum + commission_cum + monitoring_cum + conflict_cum 
                           ,
                           cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_conflict_2 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                          +	pollution	+ shipping + construction
-                          ,
-                          cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_conflict_3 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+res_conflict_main_2 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                           +	pollution	+ shipping  + construction
                           + symmetry + bi_lingue  
                           ,
                           cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
 
-model_list <- list(res_agreement_1, res_agreement_2, res_agreement_3, 
-                   res_commission_1, res_commission_2, res_commission_3, 
-                   res_monitoring_1, res_monitoring_2, res_monitoring_3, 
-                   res_conflict_1, res_conflict_2, res_conflict_3)
+model_list <- list(res_agreement_main_1, res_agreement_main_2, 
+                   res_any_mech_main_1, res_any_mech_main_2,
+                   res_commission_main_1, res_commission_main_2, 
+                   res_monitoring_main_1, res_monitoring_main_2, 
+                   res_conflict_main_1, res_conflict_main_2)
 
+library(stargazer)
 stargazer(model_list,
           type = "text",
           booktaps = T,
           title = "Cox Proportional Hazard Models: risk set contiguity through land, bilateral agreements after 1980-01-01",
-          column.separate = c(3, 1),
-          dep.var.labels=c("Agreement (yes)", "Commission (yes)", "Monitoring (yes)", "Conflict (yes)"),
+          column.separate = c(2, 1),
+          dep.var.labels=c("Agreement (yes)", "Any Mechanism (yes)", "Commission (yes)", "Monitoring (yes)", "Conflict (yes)"),
+          covariate.labels=c("Prior Agreements",
+                             "Prior Commission",
+                             "Prior Monitoring",
+                             "Prior Conflict Resolution",
+                             "Pollution",
+                             "Shipping",
+                             "Fish",
+                             "Construction",
+                             "Symmetry",
+                             "Bi-lingue"),
+          column.sep.width = "-20pt",
+          notes = "standard errors clustered by dyad, $^{\\cdot}$ P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001",
+          notes.append = FALSE,
+          align=TRUE,
+          no.space = TRUE,
+          df = FALSE,
+          float.env = "sidewaystable",
+          stargazer_stat_code_list = list(c("aic", "bic")),
+          se = lapply(model_list, function(x) summary(x)$coefficients[, 4]),
+          # star.char = c("\\cdot", "*", "**", "***"),
+          # star.cutoffs = c(.1, .05, .01, .001),
+          style = "ajs",
+          omit.stat = c("rsq", "max.rsq"),
+          add.lines = list(c("AIC", as.character(round(unlist(lapply(model_list, function(x) AIC(x))), 3))),
+                           c("BIC", as.character(round(unlist(lapply(model_list, function(x) BIC(x))), 3))),
+                           c("Events", as.character(unlist(lapply(model_list, function(x) (x)$nevent))))
+                           )
+)
+
+
+res_agreement_1.1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum ,
+                            cluster = dyad_id, data = dyadicdat)
+res_agreement_2.1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            +	pollution	+ shipping +	fish + construction
+                            + symmetry + bi_lingue,
+                            cluster = dyad_id, data = dyadicdat)
+res_any_mech_1.1 <-    coxph(Surv(time, any_mech_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum,
+                           cluster = dyad_id, data = dyadicdat)
+res_any_mech_2.1 <-    coxph(Surv(time, any_mech_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                           +	pollution	+ shipping +	fish + construction
+                           + symmetry + bi_lingue,
+                           cluster = dyad_id, data = dyadicdat)
+res_commission_1.1 <-   coxph(Surv(time, commission) ~  
+                              + agr_cum + commission_cum + monitoring_cum + conflict_cum,
+                            cluster = dyad_id, data = dyadicdat)
+res_commission_2.1 <-   coxph(Surv(time, commission) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            +	pollution	+ shipping +	fish + construction
+                            + symmetry + bi_lingue  
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+res_monitoring_1.1 <-   coxph(Surv(time, mon_cant) ~ 
+                              + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+res_monitoring_2.1 <-   coxph(Surv(time, mon_cant) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            +	pollution	+ shipping +	fish + construction
+                            + symmetry + bi_lingue  
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+res_conflict_1.1 <-     coxph(Surv(time, conflict) ~    
+                              + agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+res_conflict_2.1 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            +	pollution	+ shipping  + construction
+                            + symmetry + bi_lingue  
+                            ,
+                            cluster = dyad_id, data = dyadicdat)
+
+model_list <- list(res_agreement_1, res_agreement_2, res_agreement_1.1, res_agreement_2.1, 
+                   res_any_mech_1, res_any_mech_2, res_any_mech_1.1, res_any_mech_2.1,
+                   res_commission_1, res_commission_2, res_commission_1.1, res_commission_2.1, 
+                   res_monitoring_1, res_monitoring_2, res_monitoring_1.1, res_monitoring_2.1, 
+                   res_conflict_1, res_conflict_2, res_conflict_1.1, res_conflict_2.1)
+
+library(stargazer)
+stargazer(model_list,
+          type = "text",
+          booktaps = T,
+          title = "Cox Proportional Hazard Models: risk set contiguity through land, bilateral agreements after 1980-01-01",
+          # column.separate = c(3, 1),
+          # dep.var.labels=c("Agreement (yes)", "Commission (yes)", "Monitoring (yes)", "Conflict (yes)"),
           covariate.labels=c("Prior Agreements",
                              "Prior Commission",
                              "Prior Monitoring",
@@ -693,9 +886,8 @@ stargazer(model_list,
           add.lines = list(c("AIC", as.character(round(unlist(lapply(model_list, function(x) AIC(x))), 3))),
                            c("BIC", as.character(round(unlist(lapply(model_list, function(x) BIC(x))), 3))),
                            c("Events", as.character(unlist(lapply(model_list, function(x) (x)$nevent))))
-                           )
+          )
 )
-
 
 results <- function(res_agreement_1){
   names <- names(summary(res_agreement_1)$coefficients[, 2])
@@ -714,28 +906,47 @@ results <- function(res_agreement_1){
 results_list <- lapply(model_list, function(x) results(x))
 results_list <- lapply(seq_along(results_list), function(x) cbind(results_list[[x]], unique.id=x))
 results <- do.call("rbind", results_list)
-results$dv[results$unique.id %in% c(1:3)] <- "Agreement"
-results$dv[results$unique.id %in% c(4:6)] <- "Commission"
-results$dv[results$unique.id %in% c(7:9)] <- "Montoring"
-results$dv[results$unique.id %in% c(10:12)] <- "Conflict"
+results$dv[results$unique.id %in% c(1:4)] <- "Agreement"
+results$dv[results$unique.id %in% c(5:8)] <- "Any Mechanims"
+results$dv[results$unique.id %in% c(9:12)] <- "Commission"
+results$dv[results$unique.id %in% c(13:16)] <- "Montoring"
+results$dv[results$unique.id %in% c(17:20)] <- "Conflict"
 
+results$shape <- ifelse(results$unique.id %in% c(3,4,7,8,11,12,15,16,19,20), "round", "triangle")
+results$shape <- factor(results$shape, levels= unique(results$shape))
+results$model <- ifelse(results$unique.id %in% c(1,3,5,7,9,11,13,15,17,19), "Main Effects", "Full Model")
+results$model <- factor(results$model, levels= unique(results$model))
 
 results <- results[results$names %in% c("agr_cum", "commission_cum", "monitoring_cum", "conflict_cum"),]
+results$names[results$names == "agr_cum"] <- "Prior Agreements"
+results$names[results$names == "commission_cum"] <- "Prior Commissions"
+results$names[results$names == "monitoring_cum"] <- "Prior Monitoring"
+results$names[results$names == "conflict_cum"] <- "Prior Conflict Resolution"
 
-ggplot(results, aes(x = names, y = yhat, ymin = lower, ymax = upper, group = unique.id, col = unique.id)) + 
-  geom_pointrange(position = position_dodge(width = 0.5)) + 
+# to reverse order of the labels coherent with the table
+results$names <- factor(results$names,levels=rev(unique(results$names)))
+
+ggplot(results) + 
+  geom_pointrange(position = position_dodge(width = 0.5),  aes(x = names, y = yhat, ymin = lower, ymax = upper, group = unique.id, col = shape, shape = model)) + 
+  scale_x_discrete(limits = rev(levels("names"))) +
   coord_flip() +
   geom_hline(yintercept = 1, lty = 3) +
-  ylab("95% confidence intervals") +
+  ylab("95% Confidence Intervals around the Hazards Ratio") +
   xlab("Explanatory Variables") + #switch because of the coord_flip() above
-  ggtitle("...") +
+  ggtitle("") +
   theme_minimal() +
-  theme(text=element_text(size=18, color="black"),
-        panel.spacing = unit(1, "lines")) +
-  # ylab("Sensitivity (95% CI)") +
-  scale_fill_manual(values = c("black", "black", "black", "red", "red", "red", "dark grey", "dark grey", "dark grey", "blue","blue", "blue")) + 
+  # scale_y_discrete(limits="hazard ratio") + 
+  scale_shape_manual(name = "model",
+                     labels = c("Main Effects", "Full Model"),
+                     values = c(1,2)) +
+  scale_colour_manual(name = "shape",
+                      labels = c("1980-2020", "1841-2020"),
+                      values = c("grey","black")) +
   # scale_shape_manual(values = c(16,17,16,17, 16,17)) +
-  theme(axis.text.x = element_text(size=15, vjust=0.5, color = 'black'),  # x-axis labels
+  theme(text=element_text(size=15, color="black"),
+        strip.text.x = element_text(size = 15),
+        panel.spacing = unit(3, "lines"),
+        axis.text.x = element_text(size=15, vjust=0.5, color = 'black'),  # x-axis labels
         axis.text.y = element_text(size=15, vjust=0.5, color = 'black'),  # y-axis labels
         axis.title.x = element_text(size=17.5, vjust=0.1),                # x-title justification  
         axis.title.y = element_text(size=17.5, vjust=1.5),                 # y-title justification
@@ -743,24 +954,11 @@ ggplot(results, aes(x = names, y = yhat, ymin = lower, ymax = upper, group = uni
         legend.position = "bottom",       
         legend.text = element_text(size = 14.5)
         ) +
-  facet_wrap(~dv)
-
-forestplot <- function(d1, d2, xlab="Estimate", ylab="Study")
-{
-  d = rbind(cbind(d1, df = "1"), cbind(d2, df = "2"))
-  require(ggplot2)
-  p <- ggplot(d, aes(x=x, y=y, ymin=ylo, ymax=yhi, color = df, group = df)) + 
-    geom_pointrange(position = position_dodge(width = 0.5)) + 
-    coord_flip() +
-    geom_hline(yintercept=0, lty=3) +
-    ylab(xlab) +
-    xlab(ylab) + #switch because of the coord_flip() above
-    ggtitle("...")
-  return(p)
-} 
-
-exp(coef(res_agreement_1))
-summary(res_agreement_1)$coefficients[, 4]
+  facet_wrap(~dv, ncol=5,
+             labeller = labeller(variable = c("treaty_yes" = "Agreement (yes)", 
+                                              "commission" = "Commission (yes)",  
+                                              "monitoring" = "Monitoring (yes)", 
+                                              "conflict" = "Conflict Resolution (yes)"))) 
 
 
 res_agreement_1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
@@ -807,7 +1005,7 @@ res_conflict_2 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + mo
                             +	pollution	+ shipping + construction
                             ,
                             cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_conflict_3 <-     cph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+res_conflict_3 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping  + construction
                             + symmetry  + total_size + border_length
                             ,
@@ -856,57 +1054,60 @@ stargazer(model_list,
           )
 )
 
-res_agreement_1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                            ,
-                            cluster = dyad_id, data = dyadicdat)
-res_agreement_2 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+cox.zph(res_agreement_2.1)
+cox.zph(res_any_mech_2.1)
+cox.zph(res_commission_2.1)
+cox.zph(res_monitoring_2.1)
+cox.zph(res_conflict_2.1)
+
+res_agreement_2 <-    coxph(Surv(time, treaty_yes) ~ agr_cum +  tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum  + tt(monitoring_cum) + conflict_cum + tt(conflict_cum)
                             +	pollution	+ shipping +	fish + construction
                             ,
-                            cluster = dyad_id, data = dyadicdat)
-res_agreement_3 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
+                            cluster = dyad_id, data =  dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,], tt = function(x, t, ...) x * log(t+20))
+res_agreement_3 <-    coxph(Surv(time, treaty_yes) ~ agr_cum +  tt(agr_cum) + commission_cum + tt(commission_cum) + monitoring_cum  + tt(monitoring_cum) + conflict_cum + tt(conflict_cum)
                             +	pollution	+ shipping +	fish + construction
                             + symmetry + bi_lingue  
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,], tt = function(x, t, ...) x * log(t+20))
 res_commission_1 <-   coxph(Surv(time, commission) ~  
                               + agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_commission_2 <-   coxph(Surv(time, commission) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping +	fish + construction
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_commission_3 <-   coxph(Surv(time, commission) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping +	fish + construction
                             + symmetry + bi_lingue  
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_monitoring_1 <-   coxph(Surv(time, monitoring) ~ 
                               + agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_monitoring_2 <-   coxph(Surv(time, monitoring) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping +	fish + construction
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_monitoring_3 <-   coxph(Surv(time, monitoring) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping +	fish + construction
                             + symmetry + bi_lingue  
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_conflict_1 <-     coxph(Surv(time, conflict) ~    
                               + agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_conflict_2 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping + construction
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 res_conflict_3 <-     coxph(Surv(time, conflict) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum 
                             +	pollution	+ shipping  + construction
                             + symmetry + bi_lingue  
                             ,
-                            cluster = dyad_id, data = dyadicdat)
+                            cluster = dyad_id, data = dyadicdat, tt = function(x, t, ...) x * log(t+20))
 
 model_list <- list(res_agreement_1, res_agreement_2, res_agreement_3, 
                    res_commission_1, res_commission_2, res_commission_3, 
@@ -1007,7 +1208,7 @@ model_list <- list(res_agreement_1, res_agreement_2, res_agreement_3,
                    res_conflict_1, res_conflict_2, res_conflict_3)
 
 stargazer(model_list,
-          type = "latex",
+          type = "text",
           booktaps = T,
           title = "Cox Proportional Hazard Models: risk set contiguity through land, all bilateral agreements after 1945-01-01",
           column.separate = c(3, 1),
@@ -1042,40 +1243,6 @@ stargazer(model_list,
 )
 
 
-dyadicdat <- dyadicdat %>%
-  mutate(any_ext_yes = ifelse(mon_comm == 1 | conf_body == 1 | conf_fed == 1, 1, 0),
-         any_mech_yes = ifelse(commission == 1 | monitoring == 1 | conflict == 1, 1, 0))
-
-res_agr_1 <-    coxph(Surv(time, treaty_yes) ~    
-                    + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                    ,
-                    cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_agr_2 <-    coxph(Surv(time, treaty_yes) ~    
-                    + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                    +	pollution	+ shipping + fish + construction
-                    ,
-                    cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_agr_3 <-    coxph(Surv(time, treaty_yes) ~    
-                    + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                    +	pollution	+ shipping + fish + construction
-                    + symmetry + bi_lingue  
-                    ,
-                    cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_mech_1 <-   coxph(Surv(time, any_mech_yes) ~                    
-                    + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                    ,
-                    cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_mech_2 <-   coxph(Surv(time, any_mech_yes) ~                    
-                    + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                    +	pollution	+ shipping + fish + construction                  
-                    ,
-                    cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
-res_mech_3 <-   coxph(Surv(time, any_mech_yes) ~                    
-                    + agr_cum + commission_cum + monitoring_cum + conflict_cum 
-                    +	pollution	+ shipping + fish + construction
-                    + symmetry + bi_lingue  
-                    ,
-                    cluster = dyad_id, data = dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,])
 res_ext_1  <-   coxph(Surv(time, any_ext_yes) ~ 
                     agr_cum + commission_cum + monitoring_cum + conflict_cum 
                     ,
