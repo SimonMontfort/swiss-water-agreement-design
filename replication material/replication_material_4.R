@@ -1,21 +1,20 @@
 ### Swiss Water Coooperation
 ## Authors: Simon Montfort, Manuel Fischer, James Hollway, Nicolas Jager
-# > R.version
-#                            
-# platform       x86_64-apple-darwin15.6.0   
+# R.version
+# platform       x86_64-apple-darwin17.0     
 # arch           x86_64                      
-# os             darwin15.6.0                
-# system         x86_64, darwin15.6.0        
+# os             darwin17.0                  
+# system         x86_64, darwin17.0          
 # status                                     
-# major          3                           
-# minor          6.3                         
-# year           2020                        
+# major          4                           
+# minor          0.4                         
+# year           2021                        
 # month          02                          
-# day            29                          
-# svn rev        77875                       
+# day            15                          
+# svn rev        80002                       
 # language       R                           
-# version.string R version 3.6.3 (2020-02-29)
-# nickname       Holding the Windsock    
+# version.string R version 4.0.4 (2021-02-15)
+# nickname       Lost Library Book   
 ######################################
 ### Load packages
 ######################################
@@ -41,7 +40,7 @@ library("Hmisc")
 # (3) variables and covariates 
 # (4) descriptives
 # (5) analysis
-# (6) assumptions and rectifications
+# (6) robustness checks
 
 ######################################
 # (1) treaty design data
@@ -511,7 +510,7 @@ cox.zph(res_monitoring_main_2)
 cox.zph(res_conflict_main_2)
 
 ############
-# (5) robustness checks
+# (6) robustness checks
 ############
 
 res_agreement_1 <-    coxph(Surv(time, treaty_yes) ~ agr_cum + commission_cum + monitoring_cum + conflict_cum,
