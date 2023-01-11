@@ -85,7 +85,6 @@ dyadicdat[is.na(dyadicdat)] <- 0
 # (3) variables
 ############
 
-
 # I. sequencing
 dyadicdat <- dyadicdat %>%
   group_by(cantons) %>%
