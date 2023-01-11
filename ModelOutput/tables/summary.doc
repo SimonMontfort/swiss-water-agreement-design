@@ -1,0 +1,183 @@
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; text-align:left; ">Row</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; ">N.Valid</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; ">Mean</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; ">Std.Dev</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; ">Min</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; ">Q1</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; col7">Median</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; col8">Q3</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; col9">Max</th>
+<th style="border-top: double; text-align:center; font-style:italic; font-weight:normal; padding:0.2cm; border-bottom:1px solid black; 0">Time.varying</th>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Agreement (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.67</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.48</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Commission (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.24</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.43</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Monitoring (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.30</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.46</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Conflict Resolution (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.29</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.46</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Prior Agreements</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">1.56</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">2.43</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">2.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">9.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">yes</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Prior Commission</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.76</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">1.75</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">7.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">yes</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Prior Monitoring</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.75</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">1.48</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">6.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">yes</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Prior Conflict Resolution</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.84</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">1.93</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">8.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">yes</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Pollution (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.29</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.46</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Shipping (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.11</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.32</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Fish (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.32</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.47</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Construction (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.24</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.43</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">Bi-lingue (yes)</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.30</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0.46</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col7">0.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col8">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; col9">1.00</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; 0">no</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; border-bottom: double; ">Symmetry</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; ">63</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; ">0.14</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; ">0.21</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; ">0</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; col7">0.03</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; col8">0.24</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; col9">0.71</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center; border-bottom: double; 0">no</td>
+</tr>
+</table>
+

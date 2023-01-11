@@ -27,6 +27,7 @@ library("ggplot2")
 library("summarytools")
 library("survival")
 library("survminer")
+library("tidyr")
 library("igraph")
 library("ggrepel")
 library("Hmisc")
@@ -34,6 +35,8 @@ library("sandwich")
 library("broom")
 library("texreg")
 library("scales")
+library("stargazer")
+library("wordreg")
 
 ######################################
 # description of code
@@ -59,9 +62,8 @@ load("ModelInput/dyadicdat_2.RData")
 # subset to bilateral agreements
 dyadicdat <- dyadicdat %>% filter(bilateral == 1)
 
-# # subset to those issues included
-dyadicdat <- dyadicdat %>%
-  filter(pollution == 1 | fish == 1 | shipping == 1 | construction == 1 )
+# subset to those issues included
+dyadicdat <- dyadicdat %>% filter(pollution == 1 | fish == 1 | shipping == 1 | construction == 1 )
 
 ##########
 # (2) risk set
@@ -82,6 +84,7 @@ dyadicdat[is.na(dyadicdat)] <- 0
 ############
 # (3) variables
 ############
+
 
 # I. sequencing
 dyadicdat <- dyadicdat %>%
@@ -135,8 +138,13 @@ dyadicdat$symmetry <- 1 - abs(dyadicdat$share_drain_1 - dyadicdat$share_drain_2)
 load("ModelInput/lang.RData")
 dyadicdat <- left_join(dyadicdat, lang, by = c("dyad_id"))
 
-# adapt risk set becuse cantons do not cooperate when no water flows from one to the other
+# adapt risk set because cantons do not cooperate when no water flows from one to the other
 dyadicdat <- dyadicdat[!is.nan(dyadicdat$symmetry),]
+
+# number of cantons in the risk set:
+length(unique(dyadicdat$cantons))
+# number of repeated events:
+sum(duplicated(dyadicdat$cantons[dyadicdat$treaty_yes == 1 & dyadicdat$year >= 1980]))
 
 #################
 # (4) descriptives
@@ -175,18 +183,38 @@ co_app[4,2] <- table(desc_dat$construction, desc_dat$monitoring)[2,2]
 co_app[4,3] <- table(desc_dat$construction, desc_dat$conflict)[2,2]
 colnames(co_app) <- c("Commission", "Monitoring",  "Conflict")
 rownames(co_app) <- c("Pollution", "Shipping", "Fish", "Construction")
-# sjPlot::tab_df(co_app, show.rownames = T)
-latex(co_app, file="", caption = "Design Principles by Issue Area", booktabs = T)
+sjPlot::tab_df(co_app, show.rownames = T, title = "Design Principles by Issue Area", file = "ModelOutput/tables/co-appearance_table.doc")
+# latex(co_app, file="", caption = "Design Principles by Issue Area", booktabs = T)
+
+t.test(desc_dat$symmetry[desc_dat$commission == 1], desc_dat$symmetry[desc_dat$monitoring == 1], var.equal = F)
+t.test(desc_dat$symmetry[desc_dat$commission == 1], desc_dat$symmetry[desc_dat$conflict == 1], var.equal = F)
+t.test(desc_dat$symmetry[desc_dat$conflict == 1], desc_dat$symmetry[desc_dat$monitoring == 0], var.equal = F)
+
 
 ## III. standard summary table
 library(summarytools)
-sum_dat <- dyadicdat[dyadicdat$year >= 1980,] %>% ungroup() %>% 
-  dplyr::select(treaty_yes, commission, monitoring, conflict, agr_cum, commission_cum, monitoring_cum, conflict_cum, pollution, shipping, fish, construction, bi_lingue, symmetry) 
-sum_tab <- summarytools::descr(sum_dat, transpose = T, stats = c("n.valid", "mean", "sd", "min", "q1", "med", "q3", "max"), order = "p")
-rownames(sum_tab) <- c("Agreement (yes)", "Commission (yes)", "Monitoring (yes)", "Conflict Resolution (yes)", "Prior Agreements", "Prior Commission", "Prior Monitoring", 
-                       "Prior Conflict Resolution", "Pollution (yes)", "Shipping (yes)", "Fish (yes)", "Construction (yes)", "Bi-lingue (yes)", "Symmetry")
+sum_dat <- dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == 0,] %>% 
+  ungroup() %>% 
+  dplyr::select(treaty_yes, conflict, monitoring, commission, agr_cum, conflict_cum, monitoring_cum, commission_cum, pollution, shipping, fish, construction, bi_lingue, symmetry) 
+sum_tab <- summarytools::descr(sum_dat, transpose = T, stats = c("n.valid", "mean", "sd", "min", "med", "max"), order = "p")
+rownames(sum_tab) <- c("Agreement (yes)","Conflict Resolution (yes)",  "Monitoring (yes)", "Commission (yes)",  "Prior Agreements", "Prior Conflict Resolution", "Prior Monitoring", 
+                       "Prior Commission", "Pollution (yes)", "Shipping (yes)", "Fish (yes)", "Construction (yes)", "Bi-lingue (yes)", "Symmetry")
 sum_tab <- round(sum_tab, 2)
-latex(sum_tab, file="", caption = "Summary Table", booktabs = T)
+sum_tab <- cbind(sum_tab, c(rep("no", 4), rep("yes", 4), rep("no", 6)))
+colnames(sum_tab)[7] <- "Time-varying"
+sjPlot::tab_df(sum_tab, show.rownames = T)
+
+# numbers in the data:
+length(unique(dyadicdat$ID_SM[dyadicdat$year >= 1980])) # number of agreements
+nrow(dyadicdat[dyadicdat$year >= 1980 | dyadicdat$year == "0",]) # number of observations
+unique(dyadicdat$cantons[duplicated(dyadicdat$cantons)]) # dyads that sign two or more agreements
+length(unique(dyadicdat$cantons[duplicated(dyadicdat$cantons)])) # how many dyads sign two or more agreements
+length(unique(dyadicdat$cantons[duplicated(dyadicdat$cantons)])) # how many dyads sign two or more agreements
+length(unique(dyadicdat$cantons)) # risk set
+# length(unique(dyadicdat$cantons[duplicated(dyadicdat$cantons)])) # how many dyads sign two or more agreements
+length(unique(dyadicdat$ID_SM[dyadicdat$commission == 1 & dyadicdat$year >= 1980])) # number of commissions
+length(unique(dyadicdat$ID_SM[dyadicdat$conflict == 1 & dyadicdat$year >= 1980])) # number of conflict
+length(unique(dyadicdat$ID_SM[dyadicdat$monitoring == 1 & dyadicdat$year >= 1980])) # number of conflict
 
 ## III. plot design principles and issue area over time
 # create data first
@@ -261,7 +289,7 @@ p2 <- p %>%
 ggsave(p2, filename = "ModelOutput/Fig_2.pdf",height = 5, width = 10)
 
 ############
-# (5) setup data to modell time-varying co-variates
+# (5) setup data to model time-varying co-variates
 ############
 
 # prepare the data for the analysis of time dependent covariates as suggested by Therneau et al. 2021 https://cran.r-project.org/web/packages/survival/vignettes/timedep.pdf
@@ -276,13 +304,43 @@ dyadicdat2 <- dyadicdat %>%
 # move tiny bit back as suggested by Therneau https://rdrr.io/cran/survival/f/inst/doc/survival.pdf p. 14
 dyadicdat2$tstart[dyadicdat2$tstart == dyadicdat2$tstop] <- (dyadicdat2$tstart[dyadicdat2$tstart == dyadicdat2$tstop] -.01)
 
+example_set_up <- dyadicdat2 %>%
+  dplyr::select(ID_SM, year, cantons, tstart, tstop, commission, commission_cum, monitoring, monitoring_cum, conflict, conflict_cum) %>% 
+  slice(1:30) %>% 
+  dplyr::rename(id = ID_SM, 
+                Year = year, 
+                Dyad = cantons,
+                Commission = commission,
+                `Prior Commissions` = commission_cum,
+                Monitoring = monitoring,
+                `Prior Monitoring` = monitoring_cum,
+                `Conflict Resolution` = conflict,
+                `Prior Conflict Resolution` = conflict_cum) 
+rownames(example_set_up) <- rep("", nrow(example_set_up))
+  # rownames_to_column(var = "row") %>% 
+  # dplyr::select(-example)
+latex(example_set_up, file="", caption = "Data Setup", booktabs = T, landscape = F)
+
+# number of cantons in the risk set
+length(unique(dyadicdat2$cantons))
+# number of cantons in the risk set that do not sign an agreement
+length(unique(dyadicdat2$cantons[dyadicdat2$ID_SM == 0]))
+# number of cantons in the risk set that sign an agreement
+length(unique(dyadicdat2$cantons[dyadicdat2$ID_SM != 0]))
+# number of agreements by these cantons
+length(unique(dyadicdat2$ID_SM[dyadicdat2$ID_SM != 0 & dyadicdat2$year >= 1980]))
+# number of agreements by these cantons
+length(unique(dyadicdat2$ID_SM[dyadicdat2$ID_SM != 0 & dyadicdat2$year >= 1980 & dyadicdat2$commission == 1]))
+length(unique(dyadicdat2$ID_SM[dyadicdat2$ID_SM != 0 & dyadicdat2$year >= 1980 & dyadicdat2$monitoring == 1]))
+length(unique(dyadicdat2$ID_SM[dyadicdat2$ID_SM != 0 & dyadicdat2$year >= 1980 & dyadicdat2$conflict == 1]))
+
 ############
 # (6) analysis of repeated events: main model + robustness checks
 ############
 
 attach(dyadicdat2[dyadicdat2$year >= 1980 | dyadicdat2$year == 0,])
 
-# Main Model in Table 4: Sqrt transformation of the legacy effects
+# Sqrt transformation of the legacy effects (all those with sqrt transformations)
 rob_1.1 <- coxph(Surv(tstart, tstop, treaty_yes) ~ agreement_sqrt + conflict_sqrt + monitoring_sqrt + commission_sqrt, cluster = dyad_id)
 rob_2.1 <- coxph(Surv(tstart, tstop, treaty_yes) ~ agreement_sqrt + conflict_sqrt + monitoring_sqrt + commission_sqrt + pollution	+ shipping +	fish + construction + symmetry + bi_lingue, cluster = dyad_id)
 rob_3.1 <- coxph(Surv(tstart, tstop, conflict) ~ agreement_sqrt + conflict_sqrt + monitoring_sqrt + commission_sqrt, cluster = dyad_id)
@@ -316,16 +374,19 @@ model_list_rob_1 <- list(rob_1.1, rob_2.1, rob_3.1, rob_4.1, rob_5.1, rob_6.1, r
 model_list_main <- list(cox_1, cox_2, cox_3, cox_4, cox_5, cox_6, cox_7, cox_8)
 model_list_rob_2 <- list(rob_1.2, rob_2.2, rob_3.2, rob_4.2, rob_5.2, rob_6.2,rob_7.2, rob_8.2)
 
-texreg::texreg(model_list_rob_1, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), float.pos = "!htb", label = "table:main",
-               custom.coef.names=c("Sqrt(Prior Agreements)", "Sqrt(Prior Conflict Resolution)", "Sqrt(Prior Monitoring)", "Sqrt(Prior Commission)", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
-               caption="Cox model with the square root of cumulative legacy effects for data after 1980")
-texreg::texreg(model_list_main, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), float.pos = "!htb", label = "table:rob1",
-               custom.coef.names=c("Prior Agreements", "Prior Conflict Resolution", "Prior Monitoring", "Prior Commission", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
-               caption="Cox model with cumulative legacy effects for data after 1980")
-texreg::texreg(model_list_rob_2, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), float.pos = "!htb", label = "table:rob2",
-               custom.coef.names=c("Prior Agreements", "Prior Conflict Resolution", "Prior Monitoring", "Prior Commission", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
-               caption="Cox model witht legacy effects $>=1$ for data after 1980")
-  
+texreg::wordreg(model_list_rob_1, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), custom.coef.names=c("Sqrt(Prior Agreements)", "Sqrt(Prior Conflict Resolution)", "Sqrt(Prior Monitoring)", "Sqrt(Prior Commission)", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
+                title="Cox model with the square root of cumulative legacy effects for data after 1980", file = "ModelOutput/main.doc")
+texreg::wordreg(model_list_rob_1, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), float.pos = "!htb", label = "table:main",
+                custom.coef.names=c("Sqrt(Prior Agreements)", "Sqrt(Prior Conflict Resolution)", "Sqrt(Prior Monitoring)", "Sqrt(Prior Commission)", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
+                caption="Cox model with the square root of cumulative legacy effects for data after 1980", file = "ModelOutput/square_root.doc")
+texreg::wordreg(model_list_main, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), float.pos = "!htb", label = "table:rob1",
+                custom.coef.names=c("Prior Agreements", "Prior Conflict Resolution", "Prior Monitoring", "Prior Commission", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
+                caption="Cox model with cumulative legacy effects for data after 1980", file = "ModelOutput/cumulative.doc")
+texreg::wordreg(model_list_rob_2, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"), float.pos = "!htb", label = "table:rob2",
+                custom.coef.names=c("Prior Agreements", "Prior Conflict Resolution", "Prior Monitoring", "Prior Commission", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
+                caption="Cox model witht legacy effects $>=1$ for data after 1980", file = "ModelOutput/larger_or_equal_than_one.doc")
+
+
 ### check for the cox proportional hazards assumption, outliers, residuals and non-linearity for the main model
 ## Agreement
 # test proportional-hazards (PH) assumption
@@ -420,25 +481,84 @@ ggcoxfunctional(Surv(tstart, tstop, commission) ~ agreement_sqrt + conflict_sqrt
                 cluster = dyad_id, data = dyadicdat2[dyadicdat2$year >= 1980 | dyadicdat2$year == 0,])
 dev.off()
 
-cbind(zph_agr, zph_com, zph_mon, zph_con)
+rob_2.1_tt <- coxph(Surv(tstart, tstop, treaty_yes) ~ agreement_sqrt + conflict_sqrt + monitoring_sqrt + commission_sqrt + pollution + shipping +	fish + tt(fish) + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+rob_4.1_tt <- coxph(Surv(tstart, tstop, conflict) ~ agreement_sqrt + tt(agreement_sqrt) + conflict_sqrt + monitoring_sqrt + commission_sqrt + pollution + shipping + fish + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+model_list_rob_1 <- list(rob_1.1, rob_2.1_tt, rob_3.1, rob_4.1_tt, rob_5.1, rob_6.1, rob_7.1, rob_8.1)
 
-cox_2_tt <- coxph(Surv(tstart, tstop, treaty_yes) ~ agreement_sqrt + conflict_sqrt + monitoring_sqrt + commission_sqrt + pollution + shipping +	fish + tt(fish) + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
-cox_4_tt <- coxph(Surv(tstart, tstop, conflict) ~ agreement_sqrt + tt(agreement_sqrt) + conflict_sqrt + monitoring_sqrt + commission_sqrt	+ shipping + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
-
-model_list_tt <- list(cox_2_tt, cox_4_tt)
-
-library(stargazer)
-stargazer(model_list_tt, type = "latex", booktaps = T, title = "Cox Proportional Hazard Models: correcting for the PH Assumption", 
-          dep.var.labels=c("Agreement", "Conflict", "Monitoring", "Commission"), column.sep.width = "-25pt",
-          notes = "standard errors clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001",
+# Table 4 in the main text
+stargazer(model_list_rob_1, type = "text", title = "Cox model with the square root of cumulative legacy effects for data after 1980. PH-Tests are conducted before time transformation", 
+          dep.var.labels=c("Agreement", "Conflict", "Monitoring", "Commission"), column.sep.width = "-5pt",
+          notes = "standard errors are clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001",
           notes.append = FALSE, align=TRUE, no.space = TRUE, digits = 2, stargazer_stat_code_list = list(c("aic", "bic")),
-          se = lapply(model_list_tt, function(x) summary(x)$coefficients[, 4]),
+          se = lapply(model_list_rob_1, function(x) summary(x)$coefficients[, 4]), 
           star.char = c("*", "**", "***"), star.cutoffs = c(.05, .01, .001), style = "ajs", omit.stat = c("rsq", "max.rsq", "lr", "wald", "logrank", "ll"),
-          add.lines = list(c("AIC   ", as.character(round(unlist(lapply(model_list_tt, function(x) AIC(x))), 3))),
-                           c("BIC   ", as.character(round(unlist(lapply(model_list_tt, function(x) BIC(x))), 3))),
-                           c("Events", as.character(unlist(lapply(model_list_tt, function(x) (x)$nevent))))
-          )
+          add.lines = list(c("AIC   ", as.character(round(unlist(lapply(model_list_rob_1, function(x) AIC(x))), 3))),
+                           c("BIC   ", as.character(round(unlist(lapply(model_list_rob_1, function(x) BIC(x))), 3))),
+                           c("Events", as.character(unlist(lapply(model_list_rob_1, function(x) (x)$nevent)))),
+                           c("Missings", as.character(c(sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$conflict)), sum(is.na(dyadicdat2$conflict)),
+                                                        sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$commission)), sum(is.na(dyadicdat2$commission))))),
+                           c("PH-Test", sapply(c(tail(cox.zph(rob_1.1)$table, 1)[3], tail(cox.zph(rob_2.1)$table, 1)[3], tail(cox.zph(rob_3.1)$table, 1)[3], tail(cox.zph(rob_4.1)$table, 1)[3],
+                                                       tail(cox.zph(rob_5.1)$table, 1)[3], tail(cox.zph(rob_6.1)$table, 1)[3], tail(cox.zph(rob_7.1)$table, 1)[3], tail(cox.zph(rob_8.1)$table, 1)[3]
+                                                       ), round, 3))
+                           ),
+          out = "ModelOutput/tables/main_table_square_root.html"
 )
+
+cox_2_tt <- coxph(Surv(tstart, tstop, treaty_yes) ~ agr_cum + tt(agr_cum) + conflict_cum + tt(conflict_cum) + monitoring_cum + tt(monitoring_cum) + commission_cum + tt(commission_cum) + pollution + shipping +	fish + tt(fish) + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+cox_3_tt <- coxph(Surv(tstart, tstop, conflict) ~ agr_cum + tt(agr_cum) + conflict_cum + tt(conflict_cum) + monitoring_cum + tt(monitoring_cum) + commission_cum + tt(commission_cum), cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+cox_7_tt <- coxph(Surv(tstart, tstop, commission) ~ agr_cum + conflict_cum + monitoring_cum + commission_cum + tt(conflict_cum), cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+cox_8_tt <- coxph(Surv(tstart, tstop, commission) ~ agr_cum + tt(agr_cum) + conflict_cum + tt(conflict_cum) + monitoring_cum + commission_cum + tt(commission_cum) + pollution + shipping +	fish + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+
+model_list_main <- list(cox_1, cox_2_tt, cox_3_tt, cox_4, cox_5, cox_6, cox_7_tt, cox_8_tt)
+
+# Table 5 in the Appendix
+stargazer(model_list_main, type = "latex", title = "Cox Proportional Hazards Model with cummulative legacy effects for prior agreements in the time-period from 1980 to 2020. PH-Tests are conducted before time transformation", 
+          dep.var.labels=c("Agreement", "Conflict", "Monitoring", "Commission"), column.sep.width = "-5pt",
+          notes = "standard errors are clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001, PH-Tests are conducted before time transformation",
+          notes.append = FALSE, align=TRUE, no.space = TRUE, digits = 2, stargazer_stat_code_list = list(c("aic", "bic")),
+          se = lapply(model_list_main, function(x) summary(x)$coefficients[, 4]),
+          star.char = c("*", "**", "***"), star.cutoffs = c(.05, .01, .001), style = "ajs", omit.stat = c("rsq", "max.rsq", "lr", "wald", "logrank", "ll"),
+          add.lines = list(c("AIC   ", as.character(round(unlist(lapply(model_list_main, function(x) AIC(x))), 3))),
+                           c("BIC   ", as.character(round(unlist(lapply(model_list_main, function(x) BIC(x))), 3))),
+                           c("Events", as.character(unlist(lapply(model_list_main, function(x) (x)$nevent)))),
+                           c("Missings", as.character(c(sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$conflict)), sum(is.na(dyadicdat2$conflict)),
+                                                        sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$commission)), sum(is.na(dyadicdat2$commission))))),
+                           c("PH-Test", sapply(c(tail(cox.zph(cox_1)$table, 1)[3], tail(cox.zph(cox_2)$table, 1)[3], tail(cox.zph(cox_3)$table, 1)[3], tail(cox.zph(cox_4)$table, 1)[3],
+                                                 tail(cox.zph(cox_5)$table, 1)[3], tail(cox.zph(cox_6)$table, 1)[3], tail(cox.zph(cox_7)$table, 1)[3], tail(cox.zph(cox_8)$table, 1)[3]
+                           ), round, 3))
+          ),
+          out = "ModelOutput/tables/cumulative.html"
+)
+
+lapply(model_list_rob_2, cox.zph)
+
+rob_2.2_tt <- coxph(Surv(tstart, tstop, treaty_yes) ~ agr_one + conflict_one + monitoring_one + commission_one + pollution + shipping +	fish + tt(fish) + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+rob_3.2_tt <- coxph(Surv(tstart, tstop, conflict) ~ agr_one + tt(agr_one) + conflict_one + monitoring_one + commission_one, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+rob_4.2_tt <- coxph(Surv(tstart, tstop, conflict) ~ agr_one + tt(agr_one) + conflict_one + monitoring_one + tt(monitoring_one) + commission_one + pollution + shipping +	fish + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+rob_7.2_tt <- coxph(Surv(tstart, tstop, commission) ~ agr_one + tt(agr_one) + conflict_one + tt(conflict_one) + monitoring_one + tt(monitoring_one) + commission_one + tt(commission_one), cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+rob_8.2_tt <- coxph(Surv(tstart, tstop, commission) ~ agr_one + conflict_one + monitoring_one + tt(monitoring_one) + commission_one + pollution + shipping +	fish + construction + symmetry + bi_lingue, cluster = dyad_id, tt = function(x, t, ...) x * log(t+20))
+
+model_list_rob_2 <- list(rob_1.2, rob_2.2_tt, rob_3.2_tt, rob_4.2_tt, rob_5.2, rob_6.2, rob_7.2_tt, rob_8.2_tt)
+
+# Table 6 in the Appendix
+stargazer(model_list_rob_2, type = "latex", title = "Cox model with legacy effects $>=1$ legacy effects for prior agreements in the time-period from 1980 to 2020. PH-Tests are conducted before time transformation",
+          dep.var.labels=c("Agreement", "Conflict", "Monitoring", "Commission"), column.sep.width = "-5pt",
+          notes = "standard errors are clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001",
+          notes.append = FALSE, align=TRUE, no.space = TRUE, digits = 2, stargazer_stat_code_list = list(c("aic", "bic")),
+          se = lapply(model_list_rob_2, function(x) summary(x)$coefficients[, 4]),
+          star.char = c("*", "**", "***"), star.cutoffs = c(.05, .01, .001), style = "ajs", omit.stat = c("rsq", "max.rsq", "lr", "wald", "logrank", "ll"),
+          add.lines = list(c("AIC   ", as.character(round(unlist(lapply(model_list_rob_2, function(x) AIC(x))), 3))),
+                           c("BIC   ", as.character(round(unlist(lapply(model_list_rob_2, function(x) BIC(x))), 3))),
+                           c("Events", as.character(unlist(lapply(model_list_rob_2, function(x) (x)$nevent)))),
+                           c("Missings", as.character(c(sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$conflict)), sum(is.na(dyadicdat2$conflict)),
+                                                        sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$commission)), sum(is.na(dyadicdat2$commission))))),
+                           c("PH-Test", sapply(c(tail(cox.zph(rob_1.2)$table, 1)[3], tail(cox.zph(rob_2.2)$table, 1)[3], tail(cox.zph(rob_3.2)$table, 1)[3], tail(cox.zph(rob_4.2)$table, 1)[3],
+                                                 tail(cox.zph(rob_5.2)$table, 1)[3], tail(cox.zph(rob_6.2)$table, 1)[3], tail(cox.zph(rob_7.2)$table, 1)[3], tail(cox.zph(rob_8.2)$table, 1)[3]
+                           ), round, 3))
+          ),
+          out = "ModelOutput/tables/larger_or_equal_than_one.html"
+)
+
 
 detach(dyadicdat2[dyadicdat2$year >= 1980 | dyadicdat2$year == 0,])
 
@@ -455,37 +575,39 @@ rob_7.3 <-  coxph(Surv(tstart, tstop, commission) ~  agr_cum + conflict_cum + mo
 rob_8.3 <-  coxph(Surv(tstart, tstop, commission) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum + pollution	+ shipping +	fish + construction + symmetry + bi_lingue, cluster = dyad_id)
 
 model_list_rob_3 <- list(rob_1.3, rob_2.3, rob_3.3, rob_4.3, rob_5.3, rob_6.3, rob_7.3, rob_8.3)
-texreg::texreg(model_list_rob_3, booktabs = T, scalebox = 0.9, custom.model.names=c("1", "2", "3", "4", "5", "6", "7", "8"),
-               custom.coef.names=c("Prior Agreements", "Prior Conflict Resolution", "Prior Monitoring", "Prior Commission", "Pollution", "Shipping", "Fish", "Construction", "Symmetry", "Bi-lingue"),
-               caption="Model: Cox, Historical Effects: cumulative after 1945")
+lapply(model_list_rob_3, cox.zph)
 
-# Models
-cox.zph(rob_2.4)
-cox.zph(rob_4.4)
-cox.zph(rob_6.4)
-cox.zph(rob_8.4)
+# Robustness Checks 1: Cumulative number
+rob_1.3_tt <-  coxph(Surv(tstart, tstop, treaty_yes) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum + tt(commission_cum), cluster = dyad_id)
+rob_2.3_tt <-  coxph(Surv(tstart, tstop, treaty_yes) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum + pollution	+ shipping +	fish + construction + symmetry + bi_lingue + tt(bi_lingue), cluster = dyad_id)
+rob_3.3_tt <-  coxph(Surv(tstart, tstop, conflict) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum, cluster = dyad_id)
+rob_4.3_tt <-  coxph(Surv(tstart, tstop, conflict) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum + pollution + tt(pollution) + shipping  + construction + symmetry + bi_lingue, cluster = dyad_id)
+rob_5.3_tt <-  coxph(Surv(tstart, tstop, monitoring) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum, cluster = dyad_id)
+rob_6.3_tt <-  coxph(Surv(tstart, tstop, monitoring) ~  agr_cum + conflict_cum + tt(conflict_cum) + monitoring_cum + commission_cum + tt(commission_cum) + pollution	+ shipping +	fish + construction + symmetry + bi_lingue + tt(bi_lingue), cluster = dyad_id)
+rob_7.3_tt <-  coxph(Surv(tstart, tstop, commission) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum,  cluster = dyad_id)
+rob_8.3_tt <-  coxph(Surv(tstart, tstop, commission) ~  agr_cum + conflict_cum + monitoring_cum + commission_cum + pollution + tt(pollution)	+ shipping + tt(shipping) +	fish + construction + symmetry + bi_lingue + tt(bi_lingue), cluster = dyad_id)
 
-model_list_tt <- list(cox_10_tt)
-library(stargazer)
-stargazer(model_list_tt, type = "latex", booktaps = T, title = "Cox Proportional Hazard Models: correcting for the PH Assumption", 
-          dep.var.labels=c("Agreement", "Any Mechanism", "Conflict", "Monitoring", "Commission"), column.sep.width = "-25pt",
-          notes = "standard errors clustered by dyad, $^{\\cdot}$ P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001",
+model_list_rob_3_tt <- list(rob_1.3_tt, rob_2.3_tt, rob_3.3_tt, rob_4.3_tt, rob_5.3_tt, rob_6.3_tt, rob_7.3_tt, rob_8.3_tt)
+
+# Table 7 in the Appendix
+stargazer(model_list_rob_3_tt, type = "latex", title = "Cox Proportional Hazards Model with cumulative legacy effects for prior agreements in the time-period from 1945 to 2020. PH-Tests are conducted before time transformation",
+          dep.var.labels=c("Agreement", "Conflict", "Monitoring", "Commission"), column.sep.width = "-5pt",
+          notes = "standard errors are clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001",
           notes.append = FALSE, align=TRUE, no.space = TRUE, digits = 2, stargazer_stat_code_list = list(c("aic", "bic")),
-          se = lapply(model_list_tt, function(x) summary(x)$coefficients[, 4]),
+          se = lapply(model_list_rob_3_tt, function(x) summary(x)$coefficients[, 4]),
           star.char = c("*", "**", "***"), star.cutoffs = c(.05, .01, .001), style = "ajs", omit.stat = c("rsq", "max.rsq", "lr", "wald", "logrank", "ll"),
-          add.lines = list(c("AIC   ", as.character(round(unlist(lapply(model_list_tt, function(x) AIC(x))), 3))),
-                           c("BIC   ", as.character(round(unlist(lapply(model_list_tt, function(x) BIC(x))), 3))),
-                           c("Events", as.character(unlist(lapply(model_list_tt, function(x) (x)$nevent))))
+          add.lines = list(c("AIC   ", as.character(round(unlist(lapply(model_list_rob_3_tt, function(x) AIC(x))), 3))),
+                           c("BIC   ", as.character(round(unlist(lapply(model_list_rob_3_tt, function(x) BIC(x))), 3))),
+                           c("Events", as.character(unlist(lapply(model_list_rob_3_tt, function(x) (x)$nevent)))),
+                           c("Missings", as.character(c(sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$treaty_yes)), sum(is.na(dyadicdat2$conflict)), sum(is.na(dyadicdat2$conflict)),
+                                                        sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$monitoring)), sum(is.na(dyadicdat2$commission)), sum(is.na(dyadicdat2$commission))))),
+                           c("PH-Test", sapply(c(tail(cox.zph(rob_1.3)$table, 1)[3], tail(cox.zph(rob_2.3)$table, 1)[3], tail(cox.zph(rob_3.3)$table, 1)[3], tail(cox.zph(rob_4.3)$table, 1)[3],
+                                                 tail(cox.zph(rob_5.3)$table, 1)[3], tail(cox.zph(rob_6.3)$table, 1)[3], tail(cox.zph(rob_7.3)$table, 1)[3], tail(cox.zph(rob_8.3)$table, 1)[3]
+                           ), round, 3))
           )
 )
 
-cox.zph(cox_2)
-cox.zph(cox_4)
-cox.zph(cox_6)
-cox.zph(cox_8)
-
-detach(dyadicdat2)
-
+attach(dyadicdat2[dyadicdat2$year >= 1945 | dyadicdat2$year == 0,])
 
 
 ############
@@ -517,81 +639,3 @@ p3 <- ggsurvplot(fit_agr_1,
                  ggtheme = theme_bw(base_size = 14), 
                  data = agr_df_1)
 p3 # stored manually
-
-## Plot Cox Model Hazard Ratios and CIs
-# function for coefficient object
-results <- function(cox_1){
-  estimate <- exp(cox_1$coefficients)
-  term <- names(cox_1$coefficients)
-  lower95 <- exp(tidy(cox_1, conf.level =.95, conf.int = TRUE)$conf.low)
-  upper95 <- exp(tidy(cox_1, conf.level =.95, conf.int = TRUE)$conf.high)
-  index <- 1:length(names)
-  
-  dvs <- if (grepl("treaty_yes", cox_1$formula[2]) == T) {
-    rep("Agreement", length(names))
-  } else if (grepl("conflict", cox_1$formula[2]) == T) {
-    rep("Conflict", length(names))
-  } else if (grepl("monitoring", cox_1$formula[2]) == T) {
-    rep("Montoring", length(names))
-  } else if (grepl("commission", cox_1$formula[2]) == T) {
-    rep("Commission", length(names))}
-  
-  df <- data.frame(dvs, term, estimate, lower95, upper95, index)[1:4,]
-  
-  return(df)
-}
-
-# write all cox result output objects into a list
-model_list <- list(rob_2.1, rob_4.1, rob_6.1, rob_8.1,
-                   cox_2,cox_4, cox_6, cox_8,
-                   rob_2.2, rob_4.2, rob_6.2, rob_8.2)
-
-# apply the function to the list, give id and bind together
-results_list <- lapply(model_list, function(x) results(x))
-results_list <- lapply(seq_along(results_list), function(x) cbind(results_list[[x]], unique.id=x))
-results <- do.call("rbind", results_list)
-
-# specify shapes for different models
-results$shape[results$unique.id %in% c(1:4)] <- "round"
-results$shape[results$unique.id %in% c(5:8)] <- "triangle"
-results$shape[results$unique.id %in% c(9:12)] <- "square"
-results$shape <- factor(results$shape, levels = unique(results$shape))
-
-# write term
-results$term <- rep(c("Prior Agreements","Prior Conflict Resolution", "Prior Monitoring", "Prior Commissions"), length(results$term)/4)
-
-# to perverse order of the labels and facets coherent with the table
-results$term <- factor(results$term, levels = rev(unique(results$term)))
-results$dvs <- factor(results$dvs, levels = c("Agreement", "Conflict", "Montoring", "Commission"))
-
-# plot
-p4 <- ggplot(results) + 
-  geom_pointrange(position = position_dodge(width = 0.5), fatten = 2, size = .5, aes(x = term, y = estimate, ymin = lower95, ymax = upper95, group = unique.id, col = shape, shape = shape)) + 
-  scale_x_discrete(limits = rev(levels("names"))) +
-  coord_flip() +
-  geom_hline(yintercept = 1, lty = 3) +
-  ylab("95% Confidence Intervals around Hazards Ratios") +
-  xlab("Explanatory Variables") + #switch because of the coord_flip() above
-  ggtitle("") +
-  theme_minimal() +
-  scale_y_continuous(trans = log_trans(), breaks = trans_breaks("log", function(x) exp(x)), labels = trans_format("log", math_format(e^.x))) +
-  scale_colour_manual(name = "shape", labels = c("Square Root", "Cumulative", ">= 1"), values = c("grey40","grey0", "grey80")) +
-  scale_shape_manual(name = "shape", labels = c("Square Root", "Cumulative", ">= 1"), values = c(1, 2, 0)) + 
-  theme(text=element_text(size=12, color="black"),
-        strip.text.x = element_text(size = 12),
-        panel.spacing = unit(3, "lines"),
-        axis.text.x = element_text(size=12, vjust=0.5, color = 'black'),  # x-axis labels
-        axis.text.y = element_text(size=12, vjust=0.5, color = 'black'),  # y-axis labels
-        axis.title.x = element_text(size=15, vjust=0.1),                # x-title justification
-        axis.title.y = element_text(size=15, vjust=1.5),                 # y-title justification
-        legend.title = element_blank(),
-        legend.position = "bottom",
-        legend.text = element_text(size = 14.5)
-  ) +
-  facet_wrap(~dvs, labeller = labeller(variable = c("treaty_yes" = "Agreement (yes)", "conflict" = "Conflict (yes)", "monitoring" = "Monitoring (yes)", "commission" = "Commission (yes)")))
-p4
-ggsave(p4, filename = "ModelOutput/Fig_4.pdf", width = 8)
-
-# to check:
-ggforest(rob_8.1, data = dyadicdat[dyadicdat$year >= 1980,])
-  

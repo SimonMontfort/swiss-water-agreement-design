@@ -1,0 +1,68 @@
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Jul 28, 2022 - 15:28:18
+% Requires LaTeX packages: dcolumn 
+\begin{table}[!htbp] \centering 
+  \caption{Cox Proportional Hazards Model with cummulative legacy effects for prior agreements in the time-period from 1980 to 2020} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{-5pt}}lD{.}{.}{-2} D{.}{.}{-2} D{.}{.}{-2} D{.}{.}{-2} D{.}{.}{-2} D{.}{.}{-2} D{.}{.}{-2} D{.}{.}{-2} } 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{2}{c}{Agreement} & \multicolumn{2}{c}{Conflict} & \multicolumn{2}{c}{Monitoring} & \multicolumn{2}{c}{Commission} \\ 
+\\[-1.8ex] & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{2} & \multicolumn{1}{c}{3} & \multicolumn{1}{c}{4} & \multicolumn{1}{c}{5} & \multicolumn{1}{c}{6} & \multicolumn{1}{c}{7} & \multicolumn{1}{c}{8}\\ 
+\hline \\[-1.8ex] 
+ agr\_cum & .79^{***} & 5.24 & 1.46 & .68^{**} & .26 & -.22 & .60 & -1.16 \\ 
+  & (.19) & (3.67) & (7.41) & (.22) & (.33) & (.36) & (.38) & (10.97) \\ 
+  tt(agr\_cum) &  & -.53 & -.03 &  &  &  &  & .13 \\ 
+  &  & (.41) & (.83) &  &  &  &  & (1.25) \\ 
+  conflict\_cum & .29 & -17.13^{*} & -45.37^{**} & 1.19^{**} & -.14 & -1.02 & -3.42 & -22.46 \\ 
+  & (.48) & (8.04) & (14.87) & (.42) & (.72) & (.63) & (3.21) & (15.57) \\ 
+  tt(conflict\_cum) &  & 1.97^{*} & 5.33^{**} &  &  &  & .38 & 2.55 \\ 
+  &  & (.89) & (1.67) &  &  &  & (.58) & (1.72) \\ 
+  monitoring\_cum & -.63^{*} & -3.58 & 6.20 & -.40 & .62 & 2.31^{*} & -1.06 & .40 \\ 
+  & (.30) & (8.34) & (12.70) & (.34) & (.63) & (.98) & (.64) & (.50) \\ 
+  tt(monitoring\_cum) &  & .39 & -.88 &  &  &  &  &  \\ 
+  &  & (.95) & (1.43) &  &  &  &  &  \\ 
+  commission\_cum & -.52 & 8.41 & 24.45 & -1.79^{***} & -.29 & -.04 & .35 & 2.60 \\ 
+  & (.40) & (7.42) & (13.80) & (.33) & (.65) & (.44) & (2.39) & (10.88) \\ 
+  tt(commission\_cum) &  & -1.03 & -3.02^{*} &  &  &  &  & -.24 \\ 
+  &  & (.82) & (1.52) &  &  &  &  & (1.21) \\ 
+  pollution &  & 1.21^{*} &  & 1.78^{**} &  & 1.94^{*} &  & 2.03 \\ 
+  &  & (.48) &  & (.60) &  & (.84) &  & (1.59) \\ 
+  shipping &  & -.11 &  & 1.61 &  & -1.85 &  & -10.33 \\ 
+  &  & (1.49) &  & (.96) &  & (1.14) &  & (5.50) \\ 
+  fish &  & -17.80 &  &  &  & 1.87^{***} &  & 1.54 \\ 
+  &  & (9.49) &  &  &  & (.54) &  & (1.21) \\ 
+  tt(fish) &  & 2.24^{*} &  &  &  &  &  &  \\ 
+  &  & (1.01) &  &  &  &  &  &  \\ 
+  construction &  & 1.56^{***} &  & 2.88^{***} &  & 1.18 &  & 4.80^{***} \\ 
+  &  & (.41) &  & (.42) &  & (.74) &  & (1.17) \\ 
+  symmetry &  & .21 &  & -2.33 &  & -1.28 &  & 4.32 \\ 
+  &  & (1.21) &  & (2.90) &  & (1.43) &  & (2.94) \\ 
+  bi\_lingue &  & -.03 &  & .25 &  & .38 &  & 1.59 \\ 
+  &  & (.37) &  & (.69) &  & (.65) &  & (1.13) \\ 
+ AIC    & 273.462 & 241.098 & 99.923 & 82.673 & 120.407 & 106.019 & 95.916 & 63.131 \\ 
+BIC    & 280.413 & 267.163 & 107.046 & 90.686 & 124.185 & 115.463 & 99.456 & 72.336 \\ 
+Events & 42 & 42 & 18 & 18 & 19 & 19 & 15 & 15 \\ 
+Missings & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 
+PH-Test & 0.944 & 0 & 0.017 & 0.11 & 0.243 & 0.045 & 0.049 & 0.195 \\ 
+Observations & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} & \multicolumn{1}{c}{63} \\ 
+\hline \\[-1.8ex] 
+\textit{Notes:} & \multicolumn{8}{l}{standard errors are clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001, PH-Tests are conducted before time transformation} \\ 
+\end{tabular} 
+\end{table} 
+
+% Table created by stargazer v.5.2.3 by Marek Hlavac, Social Policy Institute. E-mail: marek.hlavac at gmail.com
+% Date and time: Thu, Jul 28, 2022 - 15:28:18
+% Requires LaTeX packages: dcolumn 
+\begin{table}[!htbp] \centering 
+  \caption{Cox Proportional Hazards Model with cummulative legacy effects for prior agreements in the time-period from 1980 to 2020} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{-5pt}} D{.}{.}{-2} D{.}{.}{-2} } 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\multicolumn{1}{c}{aic} & \multicolumn{1}{c}{bic} \\ 
+\hline \\[-1.8ex] 
+\multicolumn{2}{l}{standard errors are clustered by dyad, P $<$ 0.1, $^{*}$ P $<$ 0.05, $^{**}$ P $<$ 0.01, $^{*}$ P $<$ 0.001, PH-Tests are conducted before time transformation} \\ 
+\end{tabular} 
+\end{table} 
